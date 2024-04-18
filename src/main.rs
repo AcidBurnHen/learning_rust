@@ -1,51 +1,21 @@
-// ----- Conditionals ----
+// ----- Ownership in Functions ----
+
 fn main() {
-    let number = 3;
-    if number < 50 {
-        println!("{} is less than 50", number);
-    } else {
-        println!("{} is greater than 50", number);
-    }
+    let vec_1 = vec![1, 2, 3];
+    takes_ownership(vec_1);
+    // This will produce this error - borrow of moved value
+    // -> println!("Vec_1 is {vec_1:?}");
+    // Passing a variable to a function has the same effect as assigning the reference to a new variable
 
-    let marks = 95;
-    // let mut grade = 'N';
+    // A function can also give ownership if it returns
+    let vec_2 = gives_ownership();
+    println!("Vec_2 is {vec_2:?}");
+}
 
-    // if marks > 90 {
-    //     grade = 'A';
-    // } else if marks >= 80 {
-    //     grade = 'B';
-    // } else if marks >= 60 {
-    //     grade = 'C';
-    // } else {
-    //     grade = 'D';
-    // }
+fn takes_ownership(vec: Vec<i32>) {
+    println!("Vec is {vec:?}");
+}
 
-    // This can be remade to get captured by a variable
-    let grade = if marks > 90 {
-        'A'
-    } else if marks >= 80 {
-        'B'
-    } else if marks >= 60 {
-        'C'
-    } else {
-        'D'
-    };
-
-    println!("Grade: {}", grade);
-
-    let mut grade2 = "F";
-    match marks {
-        90..=100 => grade2 = "A",
-        80..=89 => grade2 = "B",
-        60..=79 => grade2 = "C",
-        _ => grade2 = "D",
-    }
-
-    let grade3 = match marks {
-        90..=100 => "A",
-        80..=89 => "B",
-        60..=79 => "C",
-        _ => "D",
-    };
-    // Alternative approach to store in a variable
+fn gives_ownership() -> Vec<i32> {
+    vec![1, 2, 3]
 }

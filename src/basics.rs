@@ -180,3 +180,117 @@ fn main() {
     };
     // Alternative approach to store in a variable
 }
+
+// ----- Control Flow ----
+fn main() {
+    // Loops forever unless breaked
+    loop {
+        println!("Simple loop forever");
+        break;
+    }
+
+    // Break an outer loop from inside
+    'outer: loop {
+        println!("Simple loop forever");
+        break 'outer;
+    }
+
+    // Return from a loop - simplified example without practical use
+    let a: i32 = loop {
+        break 5;
+    };
+
+    // For loop - loop through arrays or vectors
+    let vec: Vec<i32> = vec![1, 2, 3, 4, 5];
+
+    for i in vec {
+        println!("{i}");
+    }
+
+    // While loop
+    let mut num: i32 = 0;
+    while num < 10 {
+        num = num + 1;
+    }
+}
+
+// ----- Commands/Inputs ----
+fn main() {
+    let mut n = String::new();
+    println!("Input a value:");
+    std::io::stdin()
+        .read_line(&mut n)
+        .expect("Failed to read input");
+
+    let n: f64 = n.trim().parse().expect("Invalid input");
+    println!("{n}");
+
+    // To improve numerics underscores can be used in large numbers
+    let x = 45_000;
+
+    // Static vs constants
+    // Constants are inlined and statics are not
+    static WELCOME: &str = "Welcome to uwu world";
+    const PI: f32 = 3.14;
+
+    // Constants are replaced by their concrete value at compile time
+    // So they do not occupy a specific location in memory
+    let a = PI;
+    let b = PI;
+
+    // Statics do occupy a specific memory location, they are not replaced
+    // All instances of the static refer to the same location
+    let c = WELCOME;
+    let d = WELCOME;
+}
+
+// ----- Ownership ----
+// 1. Each value has a variable that's its "owner"
+// 2. There can only be one owner at a time
+// 3. When the owner goes out of scope, the value is dropped
+fn main() {
+    let s1: String = String::from("world");
+    let s2: String = s1;
+
+    // This will throw an error: borrow of moved value
+    // -> println!("S1 is {s1}");
+
+    // There are two types of memory
+    // 1. Non-Volatile
+    // 2. Volatile
+
+    // Non-Volatile
+    // refers to hard drive/ssd
+    // slow but abundant
+    // persists data
+
+    // Volatile
+    // refers to RAM/cache
+    // fast but not abundant
+    // not persisted
+    // used during program executions
+
+    // There are three distinct regions in volatile memory
+    // Stack, heap, static
+
+    // The stack stores the pointer, len and capactiy of the variable
+    // And the pointer points to the location in the heap
+    // When a new variable is assigned the value of the old variable
+    // a new pointer is created in the stack and the old one is invalidated
+
+    // In cases we want to keep the original we can copy the value and assign it to a new variable
+    let s3: String = s2.clone();
+    println!("S2 is {s2}");
+    println!("S3 is {s3}");
+    // This will copy both the stack and the heap adhering to the one owner rule
+
+    // When a variable goes out of scope it's dropped
+    // This will avoid memory leaks and dangling pointers
+
+    // This is not true for some primitive types
+    // This works because integers, floats, bools and chars are
+    // immediately stored on the stack with no reference to the heap
+    let x = 15;
+    let y = x;
+    println!("X is {x} and Y is {y}");
+}
