@@ -672,3 +672,148 @@ fn main() {
 //     Some(T),
 //     None
 // }
+
+// --------  Result ---------
+
+// Result enum is good for returning errors
+// enum Result<T, E> {
+//     Ok(T),
+//     Err(E)
+// }
+
+struct Student {
+    name: String,
+    grade: Option<u32>,
+}
+
+fn get_grade(student_name: &String, student_db: &Vec<Student>) -> Option<u32> {
+    for student in student_db {
+        // Using deraf because the student name is behind a ref
+        if student.name == *student_name {
+            return student.grade;
+        }
+    }
+
+    None
+}
+
+fn check_student(student_name: &String, student_db: &Vec<Student>) -> Result<(), String> {
+    for student in student_db {
+        if student.name == *student_name {
+            return Ok(());
+        }
+    }
+
+    Err(String::from("Failed to find student"))
+}
+
+fn find_grade_by_student_name(
+    student_name: &String,
+    student_db: &Vec<Student>,
+) -> Result<Option<u32>, String> {
+    for student in student_db {
+        if student.name == *student_name {
+            return Ok(student.grade);
+        }
+    }
+
+    Err(String::from("Failed to find student"))
+}
+
+fn main() {
+    let student_db = vec![
+        Student {
+            name: String::from("Alice"),
+            grade: Some(94),
+        },
+        Student {
+            name: String::from("Bob"),
+            grade: Some(95),
+        },
+        Student {
+            name: String::from("Charlie"),
+            grade: None,
+        },
+    ];
+
+    let student_name = String::from("Bob");
+
+    // match grade {
+    //     Some(grade) => println!("Grade: {}", grade),
+    //     None => println!("Student not found"),
+    // }
+
+    // If not interested in both None and Some outcome use if let
+
+    // let student_status = check_student(&student_name, &student_db);
+
+    // match student_status {
+    //     Ok(_) => {
+    //         let grade = get_grade(&student_name, &student_db);
+    //         if let Some(g) = grade {
+    //             println!("Grade: {}", g);
+    //         }
+    //     }
+    //     Err(errr) => println!("{}", errr),
+    // }
+
+    let student_status = find_grade_by_student_name(&student_name, &student_db);
+
+    match student_status {
+        Ok(grade) => {
+            if let Some(g) = grade {
+                println!("Grade: {}", g);
+            }
+        }
+        Err(errr) => println!("{}", errr),
+    }
+}
+
+// --------  Hashmap ---------
+use std::collections::HashMap;
+
+fn main() {
+    let mut person: HashMap<&str, i32> = HashMap::new();
+    person.insert("Tom", 40);
+    person.insert("Bob", 50);
+    person.insert("Sam", 60);
+
+    println!("Person: {:?}", person);
+    println!("The age is: {:?}", person.get("Tom").unwrap());
+
+    if person.contains_key("Tomy") {
+        println!("Exists");
+    } else {
+        println!("Doesn't exist");
+    }
+
+    match person.get("Tom") {
+        Some(value) => println!("Value: {value}"),
+        None => println!("Not found"),
+    }
+
+    for (name, age) in &person {
+        println!("Name: {name}, Age: {age}");
+    }
+
+    let mut likes: HashMap<&str, &str> = HashMap::new();
+    // Insert overwrites the previous value
+    // likes.insert("Tom", "apple");
+    // likes.insert("Tom", "banana");
+    // println!("Likes: {:?}", likes);
+
+    // Entry doesn't overwrite the previous value
+    likes.entry("Tom").or_insert("apple");
+    likes.entry("Tom").or_insert("banana");
+    println!("Likes: {:?}", likes);
+
+    let some_vec = vec![5, 5, 8, 8, 1, 0, 1, 5, 5, 5, 5];
+    let mut freq_vec: HashMap<i32, u32> = HashMap::new();
+
+    for i in &some_vec {
+        let freq: &mut u32 = freq_vec.entry(*i).or_insert(0);
+        *freq += 1;
+    }
+
+    println!("Freq: {:?}", freq_vec);
+}
