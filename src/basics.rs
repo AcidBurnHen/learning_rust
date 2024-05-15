@@ -929,3 +929,186 @@ mod order {
         }
     }
 }
+
+// --------  Modules ---------
+
+use array_tool::vec::*;
+use main_test_123::{Category, Customer, Order, Product};
+
+fn main() {
+    let product1 = Product::new(1, String::from("Laptop"), 799.99, Category::Electronics);
+    let product2 = Product::new(1, String::from("T-Shirt"), 20.99, Category::Clothing);
+    let product3 = Product::new(1, String::from("Book"), 20.99, Category::Books);
+
+    let set1: Vec<&Product> = vec![&product1, &product2];
+    let set2: Vec<&Product> = vec![&product2, &product3];
+
+    let intersection = set1.intersect(set2);
+    println!("Intersection: {:?}", intersection);
+}
+
+//! # Online Business
+//! This is a rust library for online store
+
+// ---------- Modules -----------
+// Re-exporting without having to declare the whole module public
+pub use customer::Customer;
+pub use order::Order;
+pub use product::{Category, Product};
+
+mod product {
+    // Bringing items into scope
+    pub use category::Category;
+    /// Struct for storing product related information
+    #[derive(PartialEq, Debug)]
+
+    // Making the struct public doesn't make it's fields public
+    pub struct Product {
+        id: u64,
+        pub name: String,
+        price: f64,
+        category: Category,
+    }
+
+    impl Product {
+        /// # Example
+        /// ```
+        /// use project_1234::Category;
+        /// use project_1234::Product;
+        /// let some_product = Product::new(1, String::from("Laptop"), 799.99, Category::Electronics);
+        /// assert_eq!(some_product.name, String::from("Laptop"));
+        /// ```
+        pub fn new(id: u64, name: String, price: f64, category: Category) -> Product {
+            Product {
+                id,
+                name,
+                price,
+                category,
+            }
+        }
+    }
+
+    // Unlike structs making enums public will make it's values public as well
+    mod category {
+        /// Enum for representing product category
+        #[derive(PartialEq, Debug)]
+        pub enum Category {
+            Electronics,
+            Clothing,
+            Books,
+        }
+    }
+
+    impl Product {
+        fn calculate_tax(&self) -> f64 {
+            self.price * 0.1
+        }
+
+        pub fn product_price(&self) -> f64 {
+            self.price * self.calculate_tax()
+        }
+    }
+}
+
+mod customer {
+    pub struct Customer {
+        id: u64,
+        name: String,
+        email: String,
+    }
+
+    impl Customer {
+        pub fn new(id: u64, name: String, email: String) -> Customer {
+            Customer { id, name, email }
+        }
+    }
+}
+
+mod order {
+    use crate::customer::Customer;
+    use crate::product::Product;
+
+    pub struct Order {
+        id: u64,
+        product: Product,
+        customer: Customer,
+        quantity: u32,
+    }
+
+    impl Order {
+        pub fn new(id: u64, product: Product, customer: Customer, quantity: u32) -> Order {
+            Order {
+                id,
+                product,
+                customer,
+                quantity,
+            }
+        }
+
+        fn calculate_discount(&self) -> f64 {
+            if self.quantity > 5 {
+                0.1
+            } else {
+                0.0
+            }
+        }
+
+        pub fn total_bill(&self) -> f64 {
+            let discount = self.calculate_discount();
+            let total_before_discount = self.product.product_price() * self.quantity as f64;
+            total_before_discount - (total_before_discount * discount)
+        }
+    }
+}
+
+// ------------- Generics ----------------
+// Generics allow us to define fns, structs, enums and traits with placeholders for datatypes enabeling flexible and re-usable code
+// To-be specified letter types are called generic parameters
+// They allow the support a variety of datatypes
+// Generics are defined with angle brackets < >
+
+struct Point<T, U> {
+    x: T,
+    y: U,
+}
+
+impl<T, U> Point<T, U> {
+    fn new(x: T, y: U) -> Point<T, U> {
+        Point { x, y }
+    }
+}
+
+impl Point<i32, i32> {
+    fn printing(&self) {
+        println!("x: {} , y: {}", self.x, self.y);
+    }
+}
+
+impl Point<f64, f64> {
+    fn printing(&self) {
+        println!("x: {} , y: {}", self.x, self.y);
+    }
+}
+
+// Free function example using generics
+fn add_points<T, U>(p1: &Point<T, U>, p2: &Point<T, U>) -> Point<T, U> {
+    unimplemented!();
+}
+
+fn add_points_i32(p1: &Point<i32, i32>, p2: &Point<i32, i32>) -> Point<i32, i32> {
+    unimplemented!();
+}
+
+fn add_points_f64(p1: &Point<f64, f64>, p2: &Point<f64, f64>) -> Point<f64, f64> {
+    unimplemented!();
+}
+
+fn main() {
+    let origin = Point::new(0, 0);
+    let pi = Point::new(2.0, 1.2);
+    let p2 = Point::new(1, 2.9);
+
+    origin.printing();
+
+    add_points(&origin, &origin);
+}
