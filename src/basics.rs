@@ -1112,3 +1112,335 @@ fn main() {
 
     add_points(&origin, &origin);
 }
+
+// ------------- Traits ----------------
+
+struct Square {
+    side: f32,
+    line_width: u8,
+    color: String,
+}
+
+struct Rectangle {
+    length: f32,
+    width: f32,
+    line_width: u8,
+    color: String,
+}
+
+struct Circle {
+    radius: f32,
+}
+
+// impl Square {
+//     fn calculate_area(&self) {
+//         println!("The area is: {}", self.side * self.side);
+//     }
+// }
+
+// impl Rectangle {
+//     fn area(&self) {
+//         println!("The area is: {}", self.length * self.width);
+//     }
+// }
+
+// Supertrait
+trait Draw {
+    fn draw_object(&self);
+}
+
+trait Shape: Draw + OtherTrait + AnotherTrait {
+    fn area(&self) -> f32;
+    fn perimeter(&self) -> f32 {
+        println!("Perimeter is not implemented!");
+        0.0
+    }
+}
+
+trait OtherTrait {}
+
+impl OtherTrait for Rectangle {}
+impl OtherTrait for Square {}
+
+trait AnotherTrait {}
+
+impl AnotherTrait for Rectangle {}
+impl AnotherTrait for Square {}
+
+impl Shape for Rectangle {
+    fn area(&self) -> f32 {
+        let area_of_rect = self.length * self.width;
+        println!("The area of the rectangle is: {area_of_rect}");
+        area_of_rect
+    }
+
+    fn perimeter(&self) -> f32 {
+        let perimeter_of_rect = 2.0 * (self.length + self.width);
+        println!("The perimeter of the rectangle is: {perimeter_of_rect}");
+        perimeter_of_rect
+    }
+}
+
+impl Draw for Rectangle {
+    fn draw_object(&self) {
+        println!("Drawing rectangle");
+    }
+}
+
+impl Shape for Square {
+    fn area(&self) -> f32 {
+        let area_of_square = self.side * self.side;
+        println!("The area of the square is: {area_of_square}");
+        area_of_square
+    }
+}
+
+impl Draw for Square {
+    fn draw_object(&self) {
+        println!("Drawing square");
+    }
+}
+
+// Trait bound -> It restricts the generic type to confirm to the bounds of shape
+fn shape_properties<T: Shape>(object: T) {
+    object.area();
+    object.perimeter();
+}
+
+// Dynamic dispatch using trait objects
+// Box is a smart pointer that will be covered in later lessons
+// A trait object must be behind a pointer, in this case the Box pointer
+fn shape_properties_dynamic(object: Box<dyn Shape>) {
+    object.area();
+    object.perimeter();
+}
+
+// Another way to define logic based on different traits
+// fn shape_properties<T>(object: T)
+// where
+//     T: Shape,
+// {
+//     object.area();
+//     object.perimeter();
+// }
+
+fn returns_shape() -> Box<dyn Shape> {
+    let sq = Square {
+        side: 5.0,
+        line_width: 1,
+        color: String::from("blue"),
+    };
+
+    let rect = Rectangle {
+        length: 5.0,
+        width: 3.0,
+        line_width: 1,
+        color: String::from("red"),
+    };
+
+    let x = false;
+    if x {
+        Box::new(sq)
+    } else {
+        Box::new(rect)
+    }
+}
+
+fn main() {
+    let r = Rectangle {
+        width: 5.0,
+        length: 3.0,
+        line_width: 1,
+        color: String::from("red"),
+    };
+
+    let s = Square {
+        side: 5.0,
+        line_width: 1,
+        color: String::from("blue"),
+    };
+
+    let c = Circle { radius: 5.0 };
+
+    // r.area();
+    // s.area();
+
+    // r.perimeter();
+    // s.perimeter();
+
+    // shape_properties(r);
+    // shape_properties(s);
+    //  shape_properties(c);
+
+    shape_properties_dynamic(Box::new(r));
+    shape_properties_dynamic(Box::new(s));
+}
+
+// Derived Traits
+// Marker Traits
+
+use std::fmt::Debug;
+
+// A marker trait is used to add metadata or constraints on a type
+trait Properties: PartialEq + Default + Debug + Clone {}
+
+#[derive(Debug, PartialEq, Default, Clone)]
+struct Student {
+    name: String,
+    age: u8,
+    sex: char,
+}
+
+impl Properties for Student {}
+
+fn main() {
+    let s1: Student = Student {
+        name: String::from("John"),
+        age: 20,
+        sex: 'M',
+    };
+
+    let s2: Student = Student {
+        name: String::from("Jane"),
+        age: 21,
+        sex: 'F',
+    };
+
+    println!("Student: {:?}", s1.name);
+    println!("S1 and s2 are equal: {}", s1 == s2);
+}
+
+// Asociated types in Traits
+
+#[derive(Debug)]
+struct Km {
+    value: u32,
+}
+
+struct Kmh {
+    value: u32,
+}
+
+#[derive(Debug)]
+struct Miles {
+    value: u32,
+}
+
+struct Mph {
+    value: u32,
+}
+
+// impl Kmh {
+//     fn distance_in_three_hours(&self) -> Km {
+//         Km {
+//             value: self.value * 3,
+//         }
+//     }
+// }
+
+// impl Mph {
+//     fn distance_in_three_hours(&self) -> Miles {
+//         Miles {
+//             value: self.value * 3,
+//         }
+//     }
+// }
+
+trait DistanceThreeHours {
+    type Distance;
+    fn distance_in_three_hours(&self) -> Self::Distance;
+}
+
+impl DistanceThreeHours for Kmh {
+    type Distance = Km;
+    fn distance_in_three_hours(&self) -> Self::Distance {
+        Self::Distance {
+            value: self.value * 3,
+        }
+    }
+}
+
+impl DistanceThreeHours for Mph {
+    type Distance = Miles;
+    fn distance_in_three_hours(&self) -> Self::Distance {
+        Self::Distance {
+            value: self.value * 3,
+        }
+    }
+}
+
+fn main() {
+    let speed_Kmh = Kmh { value: 90 };
+    let speed_Mph = Mph { value: 90 };
+
+    println!("{:?}", speed_Kmh.distance_in_three_hours());
+    println!("{:?}", speed_Mph.distance_in_three_hours());
+}
+
+// Choosing associated types vs generic types
+
+use std::ops::Add;
+
+trait Addition<Rhs, Output> {
+    fn add(self, rhs: Rhs) -> Output;
+}
+
+#[derive(Debug)]
+struct Point {
+    x: i32,
+    y: i32,
+}
+
+impl Addition<Point, Point> for Point {
+    fn add(self, rhs: Point) -> Point {
+        Point {
+            x: self.x + rhs.x,
+            y: self.y + rhs.y,
+        }
+    }
+}
+
+impl Addition<i32, Point> for Point {
+    fn add(self, rhs: i32) -> Point {
+        Point {
+            x: self.x + rhs,
+            y: self.y + rhs,
+        }
+    }
+}
+
+struct Line {
+    start: Point,
+    end: Point,
+}
+
+impl Addition<Point, Line> for Point {
+    fn add(self, rhs: Point) -> Line {
+        Line {
+            start: self,
+            end: rhs,
+        }
+    }
+}
+
+fn main() {
+    let p1 = Point { x: 1, y: 1 };
+    let p2 = Point { x: 2, y: 2 };
+    let p3: Point = p1.add(p2);
+
+    assert_eq!(p3.x, 3);
+    assert_eq!(p3.y, 3);
+
+    let p4 = Point { x: 1, y: 1 };
+    let p5 = p4.add(1);
+    assert_eq!(p5.x, 2);
+    assert_eq!(p5.y, 2);
+
+    let p6 = Point { x: 1, y: 1 };
+    let p7 = Point { x: 2, y: 2 };
+    let line: Line = p6.add(p7);
+    assert_eq!(line.start.x, 1);
+    assert_eq!(line.end.x, 2);
+
+    println!("Success");
+}
