@@ -1112,3 +1112,258 @@ fn main() {
 
     add_points(&origin, &origin);
 }
+
+// ------------- Traits ----------------
+
+struct Square {
+    side: f32,
+    line_width: u8,
+    color: String,
+}
+
+struct Rectangle {
+    length: f32,
+    width: f32,
+    line_width: u8,
+    color: String,
+}
+
+// impl Square {
+//     fn calculate_area(&self) {
+//         println!("The area is: {}", self.side * self.side);
+//     }
+// }
+
+// impl Rectangle {
+//     fn area(&self) {
+//         println!("The area is: {}", self.length * self.width);
+//     }
+// }
+
+trait Shape {
+    fn area(&self) -> f32;
+    fn perimeter(&self) -> f32 {
+        println!("Perimeter is not implemented!");
+        0.0
+    }
+}
+
+impl Shape for Rectangle {
+    fn area(&self) -> f32 {
+        let area_of_rect = self.length * self.width;
+        println!("The area of the rectangle is: {area_of_rect}");
+        area_of_rect
+    }
+
+    fn perimeter(&self) -> f32 {
+        let perimeter_of_rect = 2.0 * (self.length + self.width);
+        println!("The perimeter of the rectangle is: {perimeter_of_rect}");
+        perimeter_of_rect
+    }
+}
+
+impl Shape for Square {
+    fn area(&self) -> f32 {
+        let area_of_square = self.side * self.side;
+        println!("The area of the square is: {area_of_square}");
+        area_of_square
+    }
+}
+
+fn main() {
+    let r = Rectangle {
+        width: 5.0,
+        length: 3.0,
+        line_width: 1,
+        color: String::from("red"),
+    };
+
+    let s = Square {
+        side: 5.0,
+        line_width: 1,
+        color: String::from("blue"),
+    };
+
+    r.area();
+    s.area();
+
+    r.perimeter();
+    s.perimeter();
+}
+
+// Link list 2
+
+#[derive(Debug)]
+struct LinkList {
+    head: pointer,
+}
+
+#[derive(Debug)]
+struct Node {
+    element: i32,
+    next: pointer,
+}
+
+type pointer = Option<Box<Node>>;
+
+impl LinkList {
+    fn new() -> LinkList {
+        LinkList { head: None }
+    }
+
+    fn add(&mut self, element: i32) {
+        // cannot move out of `self.head` as enum variant `Some` which is behind a mutable reference
+        // match self.head {
+        //     None => {
+        //         let new_node = Some(Box::new(Node {
+        //             element: element,
+        //             next: None,
+        //         }));
+        //         self.head = new_node;
+        //     }
+        //     Some(previous_head) => {
+        //         let new_node = Some(Box::new(Node {
+        //             element: element,
+        //             next: Some(previous_head),
+        //         }));
+
+        //         self.head = new_node;
+        //     }
+        // }
+
+        let previous_head = self.head.take();
+        let new_head = Some(Box::new(Node {
+            element: element,
+            next: previous_head,
+        }));
+
+        self.head = new_head;
+    }
+
+    fn remove(&mut self) -> Option<i32> {
+        match self.head.take() {
+            Some(previous_head) => {
+                self.head = previous_head.next;
+                Some(previous_head.element)
+            }
+            None => None,
+        }
+    }
+
+    fn print(&self) {
+        let mut list_traversal = &self.head;
+
+        while !list_traversal.is_none() {
+            println!("{:?}", list_traversal.as_ref().unwrap().element);
+            list_traversal = &list_traversal.as_ref().unwrap().next;
+        }
+    }
+}
+
+fn main() {
+    let mut list = LinkList::new();
+
+    list.add(5);
+    list.add(7);
+    list.add(10);
+
+    println!("List: {:?}", list);
+    println!("{}", list.remove().unwrap());
+}
+
+// Doubly Link List
+
+use std::{
+    cell::{Ref, RefCell},
+    rc::Rc,
+};
+
+#[derive(Debug)]
+struct Doubly_LinkList {
+    head: pointer,
+    tail: pointer,
+}
+
+#[derive(Debug)]
+struct Node {
+    element: i32,
+    next: pointer,
+    prev: pointer,
+}
+
+type pointer = Option<Rc<RefCell<Node>>>;
+
+impl Doubly_LinkList {
+    fn new() -> Self {
+        Doubly_LinkList {
+            head: None,
+            tail: None,
+        }
+    }
+
+    fn add(&mut self, element: i32) {
+        let new_head = Node::new(element);
+
+        match self.head.take() {
+            Some(old_head) => {
+                old_head.borrow_mut().prev = Some(new_head.clone());
+                new_head.borrow_mut().next = Some(old_head.clone());
+                self.head = Some(new_head);
+            }
+            None => {
+                self.tail = Some(new_head.clone());
+                self.head = Some(new_head);
+            }
+        }
+    }
+
+    fn remove(&mut self) -> Option<i32> {
+        if self.head.is_none() {
+            println!("List is empty so there's nothing to remove");
+            None
+        } else {
+            let removed_val = self.head.as_ref().unwrap().borrow().element;
+            self.head
+                .take()
+                .map(|old_head| match old_head.borrow_mut().next.take() {
+                    Some(new_head) => {
+                        new_head.borrow_mut().prev = None;
+                        self.head = Some(new_head);
+                        self.head.clone()
+                    }
+                    None => {
+                        self.tail = None;
+                        println!("List is empty after removal");
+                        None
+                    }
+                });
+            Some(removed_val)
+        }
+    }
+
+    fn print(&self) {
+        let mut traversal = self.head.clone();
+        while !traversal.is_none() {
+            println!("{}", traversal.as_ref().unwrap().borrow().element);
+            traversal = traversal.unwrap().borrow().next.clone();
+        }
+    }
+}
+
+impl Node {
+    fn new(element: i32) -> Rc<RefCell<Node>> {
+        Rc::new(RefCell::new(Node {
+            element: element,
+            next: None,
+            prev: None,
+        }))
+    }
+}
+
+fn main() {
+    let mut list1 = Doubly_LinkList::new();
+
+    list1.add(30);
+    list1.add(20);
+    list1.add(34);
+}
